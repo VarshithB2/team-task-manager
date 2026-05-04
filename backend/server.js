@@ -14,30 +14,17 @@ const { errorHandler, notFound } = require('./middleware/error');
 
 const app = express();
 
-const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
-  .split(',')
-  .map((url) => url.trim());
-
+// Final CORS fix
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(null, true);
-    },
+    origin: true,
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
   })
 );
 
-app.options("*", (req, res) => {
-  res.sendStatus(200);
-});
+app.options('*', cors());
 
 app.use(express.json());
 app.use(morgan('dev'));
