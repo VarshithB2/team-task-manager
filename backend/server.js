@@ -1,4 +1,5 @@
 require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -13,29 +14,39 @@ const { errorHandler, notFound } = require('./middleware/error');
 
 const app = express();
 
-// CORS — allow CLIENT_URL (deployed frontend) + local dev
 const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
   .split(',')
-  .map((s) => s.trim());
+  .map((url) => url.trim());
 
 app.use(
   cors({
-    origin: (origin, cb) => {
-      if (!origin) return cb(null, true);
-      if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
-        return cb(null, true);
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
       }
-      return cb(new Error('Not allowed by CORS: ' + origin));
+
+      return callback(null, true);
     },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   })
 );
 
+app.options('*', cors());
+
 app.use(express.json());
 app.use(morgan('dev'));
 
-app.get('/', (req, res) => res.json({ ok: true, service: 'Team Task Manager API' }));
-app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/', (req, res) =>
+  res.json({ ok: true, service: 'Team Task Manager API' })
+);
+
+app.get('/api/health', (req, res) =>
+  res.json({ status: 'ok' })
+);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
